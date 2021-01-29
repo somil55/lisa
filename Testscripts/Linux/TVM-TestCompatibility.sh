@@ -21,6 +21,9 @@ case $DISTRO in
     ;;
     ubuntu*|debian*)
         release=$(lsb_release -c -s)
+        if [[ "$release" -eq "focal" ]]; then
+                release="bionic"
+        fi
         echo "deb [arch=amd64] http://packages.microsoft.com/repos/azurecore/ $release main" | sudo tee -a /etc/apt/sources.list.d/azure.list
 
         wget -qO - https://packages.microsoft.com/keys/microsoft.asc | apt-key add -

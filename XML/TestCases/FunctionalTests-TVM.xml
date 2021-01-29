@@ -28,6 +28,7 @@
       <SetupType>OneVM</SetupType>
       <SecureBoot>true</SecureBoot>
       <vTPM>true</vTPM>
+      <ImageType>Specialized</ImageType>
       <OverrideVMSize>Standard_D2s_v3,=~Standard_D[0-9]+s_v3</OverrideVMSize>
       <VMGeneration>2</VMGeneration>
       <ARMImageName>=~0003-com-ubuntu-server-trusted-vm\s18_04-gen2</ARMImageName>
