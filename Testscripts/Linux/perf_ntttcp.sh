@@ -340,7 +340,7 @@ Run_Ntttcp()
 			ssh "${ip}" "${sar_cmd} -n DEV 1 ${testDuration}" > "${log_folder}/sar-${ip}-${tx_log_prefix}" &
 			ssh "${ip}" "${dstat_cmd} -dam" > "${log_folder}/dstat-${ip}-${tx_log_prefix}" &
 			ssh "${ip}" "${mpstat_cmd} -P ALL 1 ${testDuration}" > "${log_folder}/mpstat-${ip}-${tx_log_prefix}" &
-			ssh "${ip}" "${lagscope_cmd} -s${server} -t${testDuration}" -V > "${log_folder}/lagscope-${ip}-${tx_log_prefix}" &
+			ssh "${ip}" "${lagscope_cmd} -t${testDuration}" -V > "${log_folder}/lagscope-${ip}-${tx_log_prefix}" &
 			tx_lagscope_log_files+=("${log_folder}/lagscope-${ip}-${tx_log_prefix}")
 		done
 
