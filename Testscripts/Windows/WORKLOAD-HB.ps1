@@ -141,6 +141,8 @@ function Main {
 			$workCommand = @"
 source utils.sh
 SetTestStateRunning
+install_fio
+stop_firewall
 fio --size=1G --name=workload --direct=1 --ioengine=libaio --filename=fiodata --overwrite=1 --readwrite=readwrite --bs=1M --iodepth=128 --numjobs=32 --runtime=300 --output-format=json+ --output=workload.json
 rm -f fiodata
 sync
@@ -153,6 +155,8 @@ SetTestStateCompleted
 			$targetIPAddress = $AllVMData[1].InternalIP
 			$workCommand = @"
 source utils.sh
+install_iperf3
+stop_firewall
 SetTestStateRunning
 iperf3 -c $targetIPAddress -t 300 -P 8 > workload.json
 SetTestStateCompleted
