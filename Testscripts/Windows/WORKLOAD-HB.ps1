@@ -43,22 +43,6 @@ function Main {
 			}
 			Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "bash ./workCommand.sh" -RunInBackground -runAsSudo
 			Wait-Time -seconds 60
-			# Wait-Time -seconds 5
-			# while ($sw.elapsed -lt $timeout) {
-			# 	Wait-Time -seconds 15
-			# 	$state = Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password "cat /home/$user/state.txt"
-			# 	if ($state -eq "TestCompleted") {
-			# 		Write-LogInfo "Completed the workload command execution in the VM $($AllVMData[0].RoleName) successfully"
-			# 		break
-			# 	} else {
-			# 		Write-LogInfo "$($state): The workload command is still running!"
-			# 	}
-			# }
-			# # hit here up on timeout
-			# if ($state -ne "TestCompleted") {
-			# 	throw "The workload command is still running after $maxWorkRunWaitMin minutes"
-			# }
-			# Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "mv workload.json $iteration.json" -RunInBackground -runAsSudo
 		}
 		return
 	}
@@ -114,6 +98,9 @@ function Main {
 		if([int]$env_setup -ge 1) {
 			Write-LogInfo "Environment has been set up..."
 			Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "echo TestCompleted > /home/$user/state.txt" -runAsSudo
+			Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "rm -rf /home/$user/*.txt" -runAsSudo
+			Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "rm -rf /home/$user/*.log" -runAsSudo
+			Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "rm -rf /home/$user/*.json" -runAsSudo
 		} else {
 			#region Add a new swap disk to Azure VM
 			$diskConfig = New-AzDiskConfig -SkuName $storageType -Location $location -CreateOption Empty -DiskSizeGB 1024
@@ -340,27 +327,26 @@ install_package "fio iperf3 ethtool stress-ng"
 			}
 		}
 
-		$maxWorkRunWaitMin = 7
-		$timeout = New-Timespan -Minutes $maxWorkRunWaitMin
-		$sw = [diagnostics.stopwatch]::StartNew()
-		while ($sw.elapsed -lt $timeout) {
-			Wait-Time -seconds 15
-			$state = Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password "cat /home/$user/wlstate.txt"
-			if ($state -eq "completed") {
-				Write-LogInfo "Completed the workload command execution in the VM $($AllVMData[0].RoleName) successfully"
-				break
-			} else {
-				Write-LogInfo "$($state): The workload command is still running!"
-			}
-		}
-
-		# hit here up on timeout
-		if ($state -ne "completed") {
-			throw "The workload command is still running after $maxWorkRunWaitMin minutes"
-		}
-
 		if (($isStorageWorkloadEnable -eq 1) -or ($isNetworkWorkloadEnable -eq 1)) {
-			# Start-WorkLoad "afterhb"
+			$maxWorkRunWaitMin = 7
+			$timeout = New-Timespan -Minutes $maxWorkRunWaitMin
+			$sw = [diagnostics.stopwatch]::StartNew()
+			while ($sw.elapsed -lt $timeout) {
+				Wait-Time -seconds 15
+				$state = Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password "cat /home/$user/wlstate.txt"
+				if ($state -eq "completed") {
+					Write-LogInfo "Completed the workload command execution in the VM $($AllVMData[0].RoleName) successfully"
+					break
+				} else {
+					Write-LogInfo "$($state): The workload command is still running!"
+				}
+			}
+
+			# hit here up on timeout
+			if ($state -ne "completed") {
+				throw "The workload command is still running after $maxWorkRunWaitMin minutes"
+			}
+
 			if ($isNetworkWorkloadEnable -eq 1) {
 				$postQueueSize = Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "ethtool -S eth0 | grep -i tx_queue | grep bytes | wc -l" -runAsSudo
 
