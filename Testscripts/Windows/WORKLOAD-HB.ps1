@@ -35,15 +35,15 @@ function Main {
 			Write-LogInfo "Starting 10-min memory workload testing"
 			# Memory workload test does not need to complete but wait for 5-min to settle down before proceeding.
 			Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "bash ./workCommand.sh" -RunInBackground -runAsSudo
-			Wait-Time -seconds 120
+
 		} else {
 			# Send workload command for 5 min
 			if ($isNetworkWorkloadEnable -eq 1) {
 				Run-LinuxCmd -ip $AllVMData[1].PublicIP -port $AllVMData[1].SSHPort -username $user -password $password -command "iperf3 -s -D" -RunInBackground -runAsSudo
 			}
 			Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "bash ./workCommand.sh" -RunInBackground -runAsSudo
-			Wait-Time -seconds 10
 		}
+		Wait-Time -seconds 120
 		return
 	}
 
@@ -332,7 +332,7 @@ install_package "fio iperf3 ethtool stress-ng"
 		}
 
 		if (($isStorageWorkloadEnable -eq 1) -or ($isNetworkWorkloadEnable -eq 1) -or ($isMemoryWorkloadEnable -eq 1)) {
-			$maxWorkRunWaitMin = 7
+			$maxWorkRunWaitMin = 10
 			$timeout = New-Timespan -Minutes $maxWorkRunWaitMin
 			$sw = [diagnostics.stopwatch]::StartNew()
 			while ($sw.elapsed -lt $timeout) {
