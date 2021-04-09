@@ -42,7 +42,7 @@ function Main {
 				Run-LinuxCmd -ip $AllVMData[1].PublicIP -port $AllVMData[1].SSHPort -username $user -password $password -command "iperf3 -s -D" -RunInBackground -runAsSudo
 			}
 			Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "bash ./workCommand.sh" -RunInBackground -runAsSudo
-			Wait-Time -seconds 60
+			Wait-Time -seconds 10
 		}
 		return
 	}
