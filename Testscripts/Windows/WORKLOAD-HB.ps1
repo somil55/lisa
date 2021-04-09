@@ -107,22 +107,24 @@ function Main {
 			$dataDisk1 = New-AzDisk -DiskName $dataDiskName -Disk $diskConfig -ResourceGroupName $rgName
 
 			$vm = Get-AzVM -Name $AllVMData[0].RoleName -ResourceGroupName $rgName
-			Start-Sleep -s $azureSyncSecond
-			$vm = Add-AzVMDataDisk -VM $vm -Name $dataDiskName -CreateOption Attach -ManagedDiskId $dataDisk1.Id -Lun 1
-			Start-Sleep -s $azureSyncSecond
+			if (!$vm.StorageProfile.DataDisks) {
+				Start-Sleep -s $azureSyncSecond
+				$vm = Add-AzVMDataDisk -VM $vm -Name $dataDiskName -CreateOption Attach -ManagedDiskId $dataDisk1.Id -Lun 1
+				Start-Sleep -s $azureSyncSecond
 
-			$ret_val = Update-AzVM -VM $vm -ResourceGroupName $rgName
-			Write-LogInfo "Updated the VM with a new data disk"
-			Write-LogInfo "Waiting for $azureSyncSecond seconds for configuration sync"
-			# Wait for disk sync with Azure host
-			Start-Sleep -s $azureSyncSecond
+				$ret_val = Update-AzVM -VM $vm -ResourceGroupName $rgName
+				Write-LogInfo "Updated the VM with a new data disk"
+				Write-LogInfo "Waiting for $azureSyncSecond seconds for configuration sync"
+				# Wait for disk sync with Azure host
+				Start-Sleep -s $azureSyncSecond
 
-			# Verify the new data disk addition
-			if ($ret_val.IsSuccessStatusCode) {
-				Write-LogInfo "Successfully add a new disk to the Resource Group, $rgName"
-			} else {
-				Write-LogErr "Failed to add a new disk to the Resource Group, $rgname"
-				throw "Failed to add a new disk"
+				# Verify the new data disk addition
+				if ($ret_val.IsSuccessStatusCode) {
+					Write-LogInfo "Successfully add a new disk to the Resource Group, $rgName"
+				} else {
+					Write-LogErr "Failed to add a new disk to the Resource Group, $rgname"
+					throw "Failed to add a new disk"
+				}
 			}
 		}
 		#endregion
