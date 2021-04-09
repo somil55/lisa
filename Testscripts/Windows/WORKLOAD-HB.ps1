@@ -113,6 +113,7 @@ function Main {
 		Write-LogInfo "For debug $env_setup"
 		if([int]$env_setup -ge 1) {
 			Write-LogInfo "Environment has been set up..."
+			Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "echo TestCompleted > /home/$user/state.txt" -runAsSudo
 		} else {
 			#region Add a new swap disk to Azure VM
 			$diskConfig = New-AzDiskConfig -SkuName $storageType -Location $location -CreateOption Empty -DiskSizeGB 1024
