@@ -109,7 +109,7 @@ function Main {
 		if (($isNetworkWorkloadEnable -ne 1) -and ($isStorageWorkloadEnable -ne 1) -and ($isMemoryWorkloadEnable -ne 1)) {
 			throw "This test needs among network, memory or storage workload. Please check your test parameter."
 		}
-		$env_setup = Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "dmesg | grep -i root= | grep -i resume | wc -l" -RunInBackground -runAsSudo -ignoreLinuxExitCode:$true | Out-Null
+		$env_setup = Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "dmesg | grep -i root= | grep -i resume | wc -l" -runAsSudo | Out-Null
 		if([int]$env_setup -ge 1) {
 			Write-LogInfo "Environment has been set up..."
 		} else {
