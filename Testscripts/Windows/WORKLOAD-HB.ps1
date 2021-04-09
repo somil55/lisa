@@ -331,7 +331,7 @@ install_package "fio iperf3 ethtool stress-ng"
 			}
 		}
 
-		if (($isStorageWorkloadEnable -eq 1) -or ($isNetworkWorkloadEnable -eq 1)) {
+		if (($isStorageWorkloadEnable -eq 1) -or ($isNetworkWorkloadEnable -eq 1) -or ($isMemoryWorkloadEnable -eq 1)) {
 			$maxWorkRunWaitMin = 7
 			$timeout = New-Timespan -Minutes $maxWorkRunWaitMin
 			$sw = [diagnostics.stopwatch]::StartNew()
