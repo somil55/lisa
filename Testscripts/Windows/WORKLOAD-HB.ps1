@@ -349,8 +349,8 @@ install_package "fio iperf3 ethtool stress-ng"
 			}
 			Copy-RemoteFiles -downloadFrom $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -download -downloadTo $LogDir -files "*.json, *.log" -runAsSudo
 
-			$work1Output = Get-Content -Path "$LogDir\beforewl.json"
-			$work2Output = Get-Content -Path "$LogDir\afterwl.json"
+			$work1Output = Get-Content -Path "$LogDir\beforehb.json"
+			$work2Output = Get-Content -Path "$LogDir\afterhb.json"
 			Write-LogDbg "Output content of before-hibernate workload"
 			Write-LogDbg $work1Output
 			Write-LogDbg "Output content of after-hibernate workload"
