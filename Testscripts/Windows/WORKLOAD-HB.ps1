@@ -181,7 +181,6 @@ echo disk > /sys/power/state
 source utils.sh
 update_repos
 install_package "fio iperf3 ethtool stress-ng"
-if [ $? ]
 "@
 		Set-Content "$LogDir\setup.sh" $setupcommand
 		#endregion
