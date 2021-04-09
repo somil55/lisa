@@ -12,14 +12,14 @@
 	1. Prepare swap space for hibernation
 	2. Compile a new kernel (optional)
 	3. Update the grup.cfg with resume=UUID=xxxx where is from blkid swap disk
-	4. Run the first storage, network or memory workload testing
+	4. Run the storage, network or memory workload testing
 	5. Hibernate the VM, and verify the VM status
-	5. Resume the VM and verify the VM status.
+	5. Resume the VM and verify the VM status
 	6. Verify no kernel panic or call trace
-	7. Run the second storage, network or memory workload testing.
+	7. Verify the storage, network or memory workload testing resume
 	8. Verify no kernel panic or call trace after resume.
 	TODO: Find utilization, throughput or latency values parsing from workload output
-	and compare those results before/after hibernation.
+	and compare those results before/after hibernation
 #>
 
 param([object] $AllVmData, [string]$TestParams)
@@ -35,7 +35,7 @@ function Main {
 			Write-LogInfo "Starting 10-min memory workload testing"
 			# Memory workload test does not need to complete but wait for 5-min to settle down before proceeding.
 			Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "bash ./workCommand.sh" -RunInBackground -runAsSudo
-			Wait-Time -seconds 300
+			Wait-Time -seconds 120
 		} else {
 			# Send workload command for 5 min
 			if ($isNetworkWorkloadEnable -eq 1) {
@@ -132,8 +132,8 @@ function Main {
 		# setting up the workload script
 		if ($isStorageWorkloadEnable -eq 1) {
 			$workCommand = @"
-source utils.sh
 echo running > wlstate.txt
+source utils.sh
 install_fio
 stop_firewall
 fio --size=1G --name=workload --direct=1 --ioengine=libaio --filename=fiodata --overwrite=1 --readwrite=readwrite --bs=1M --iodepth=128 --numjobs=32 --runtime=300 --output-format=json+ --output=workload.json
@@ -146,10 +146,10 @@ echo completed > wlstate.txt
 		if ($isNetworkWorkloadEnable -eq 1) {
 			$targetIPAddress = $AllVMData[1].InternalIP
 			$workCommand = @"
+echo running > wlstate.txt
 source utils.sh
 install_iperf3
 stop_firewall
-echo running > wlstate.txt
 iperf3 -c $targetIPAddress -t 300 -P 8 > workload.json
 echo completed > wlstate.txt
 "@
