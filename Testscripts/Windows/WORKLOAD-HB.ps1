@@ -45,22 +45,22 @@ function Main {
 				Run-LinuxCmd -ip $AllVMData[1].PublicIP -port $AllVMData[1].SSHPort -username $user -password $password -command "iperf3 -s -D" -RunInBackground -runAsSudo
 			}
 			Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "bash ./workCommand.sh" -RunInBackground -runAsSudo
-			Wait-Time -seconds 5
-			while ($sw.elapsed -lt $timeout) {
-				Wait-Time -seconds 15
-				$state = Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password "cat /home/$user/state.txt"
-				if ($state -eq "TestCompleted") {
-					Write-LogInfo "Completed the workload command execution in the VM $($AllVMData[0].RoleName) successfully"
-					break
-				} else {
-					Write-LogInfo "$($state): The workload command is still running!"
-				}
-			}
-			# hit here up on timeout
-			if ($state -ne "TestCompleted") {
-				throw "The workload command is still running after $maxWorkRunWaitMin minutes"
-			}
-			Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "mv workload.json $iteration.json" -RunInBackground -runAsSudo
+			# Wait-Time -seconds 5
+			# while ($sw.elapsed -lt $timeout) {
+			# 	Wait-Time -seconds 15
+			# 	$state = Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password "cat /home/$user/state.txt"
+			# 	if ($state -eq "TestCompleted") {
+			# 		Write-LogInfo "Completed the workload command execution in the VM $($AllVMData[0].RoleName) successfully"
+			# 		break
+			# 	} else {
+			# 		Write-LogInfo "$($state): The workload command is still running!"
+			# 	}
+			# }
+			# # hit here up on timeout
+			# if ($state -ne "TestCompleted") {
+			# 	throw "The workload command is still running after $maxWorkRunWaitMin minutes"
+			# }
+			# Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "mv workload.json $iteration.json" -RunInBackground -runAsSudo
 		}
 		return
 	}
@@ -149,7 +149,6 @@ sync
 echo 3 > /proc/sys/vm/drop_caches
 SetTestStateCompleted
 "@
-			Set-Content "$LogDir\workCommand.sh" $workCommand
 		}
 		if ($isNetworkWorkloadEnable -eq 1) {
 			$targetIPAddress = $AllVMData[1].InternalIP
@@ -161,14 +160,13 @@ SetTestStateRunning
 iperf3 -c $targetIPAddress -t 300 -P 8 > workload.json
 SetTestStateCompleted
 "@
-			Set-Content "$LogDir\workCommand.sh" $workCommand
 		}
 		if ($isMemoryWorkloadEnable -eq 1) {
 			$workCommand = @"
 stress-ng --vm 16 --vm-bytes 100% -t 10m
 "@
-			Set-Content "$LogDir\workCommand.sh" $workCommand
 		}
+		Set-Content "$LogDir\workCommand.sh" $workCommand
 		#endregion
 
 		# required scripts for other operations.
@@ -309,6 +307,8 @@ install_package "fio iperf3 ethtool stress-ng"
 			throw "$($vmStatus.Statuses[1].DisplayStatus): Could not find the VM status after resuming"
 		}
 
+		$process_exist = Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "ps aux | grep -i fio" -ignoreLinuxExitCode:$true -RunAsSudo
+		Write-LogInfo "For debug - $process_exist"
 		# Verify kernel panic or call trace
 		$fstate = Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "[[ -f /var/log/syslog ]];echo $?" -ignoreLinuxExitCode:$true -RunAsSudo
 		if ($fstate -eq "1") {
