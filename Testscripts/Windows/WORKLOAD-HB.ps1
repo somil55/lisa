@@ -306,7 +306,7 @@ install_package "fio iperf3 ethtool stress-ng"
 		} else {
 			throw "$($vmStatus.Statuses[1].DisplayStatus): Could not find the VM status after resuming"
 		}
-
+		start-sleep 500
 		$process_exist = Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "ps aux | grep -i fio" -ignoreLinuxExitCode:$true -RunAsSudo
 		Write-LogInfo "For debug - $process_exist"
 		# Verify kernel panic or call trace
@@ -339,7 +339,7 @@ install_package "fio iperf3 ethtool stress-ng"
 
 
 		if (($isStorageWorkloadEnable -eq 1) -or ($isNetworkWorkloadEnable -eq 1)) {
-			Start-WorkLoad "afterhb"
+			# Start-WorkLoad "afterhb"
 			if ($isNetworkWorkloadEnable -eq 1) {
 				$postQueueSize = Run-LinuxCmd -ip $AllVMData[0].PublicIP -port $AllVMData[0].SSHPort -username $user -password $password -command "ethtool -S eth0 | grep -i tx_queue | grep bytes | wc -l" -runAsSudo
 
