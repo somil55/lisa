@@ -3,13 +3,16 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from enum import Enum
 from functools import partial
 from typing import Any, Dict, List, Type, cast
 
-from lisa import schema
+from lisa import notifier, schema
 from lisa.environment import Environment, EnvironmentStatus
 from lisa.feature import Feature, Features
 from lisa.node import RemoteNode
+from lisa.notifier import MessageBase
 from lisa.util import (
     InitializableMixin,
     LisaException,
@@ -21,6 +24,23 @@ from lisa.util.logger import Logger, get_logger
 from lisa.util.perf_timer import create_timer
 
 _get_init_logger = partial(get_logger, "init", "platform")
+
+PlatformStatus = Enum(
+    "TestRunStatus",
+    [
+        "INITIALIZED",
+        "PREPARED",
+        "DEPLOYED",
+        "DELETED",
+    ],
+)
+
+
+@dataclass
+class PlatformMessage(MessageBase):
+    type: str = "Plaform"
+    name: str = ""
+    status: PlatformStatus = PlatformStatus.INITIALIZED
 
 
 class WaitMoreResourceError(Exception):
@@ -108,6 +128,9 @@ class Platform(subclasses.BaseClassWithRunbookMixin, InitializableMixin):
         """
         self.initialize()
 
+        platform_message = PlatformMessage(name=self.type_name())
+        notifier.notify(platform_message)
+
         log = get_logger(f"prepare[{environment.name}]", parent=self._log)
 
         # check and fill connection information for RemoteNode. So that the
@@ -130,6 +153,11 @@ class Platform(subclasses.BaseClassWithRunbookMixin, InitializableMixin):
                 f"no capability found for environment: {environment.runbook}"
             )
 
+        platform_message = PlatformMessage(
+            status=PlatformStatus.PREPARED, name=self.type_name()
+        )
+        notifier.notify(platform_message)
+
         return environment
 
     def deploy_environment(self, environment: Environment) -> None:
@@ -146,6 +174,11 @@ class Platform(subclasses.BaseClassWithRunbookMixin, InitializableMixin):
             node.features = Features(node, self)
         log.info(f"deployed in {timer}")
 
+        platform_message = PlatformMessage(
+            status=PlatformStatus.DEPLOYED, name=self.type_name()
+        )
+        notifier.notify(platform_message)
+
     def delete_environment(self, environment: Environment) -> None:
         log = get_logger(f"del[{environment.name}]", parent=self._log)
         log.debug("deleting")
@@ -153,6 +186,11 @@ class Platform(subclasses.BaseClassWithRunbookMixin, InitializableMixin):
         environment.status = EnvironmentStatus.Deleted
         self._delete_environment(environment, log)
         log.debug("deleted")
+
+        platform_message = PlatformMessage(
+            status=PlatformStatus.DELETED, name=self.type_name()
+        )
+        notifier.notify(platform_message)
 
 
 def load_platform(platforms_runbook: List[schema.Platform]) -> Platform:
